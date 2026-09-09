@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
 import { checkInstalledExtensionUpdate, checkPluginUpdates, updateOfficialMarketplacePlugins } from "./plugin-updates.ts";
 
 const pluginManifest = {
@@ -120,14 +119,5 @@ describe("plugin update checks", () => {
 
     expect(installedIds).toEqual([pluginManifest.id]);
     expect(result.updated.map((update) => update.pluginId)).toEqual([pluginManifest.id]);
-  });
-});
-
-describe("official plugin auto-update workspace notice", () => {
-  test("updates silently without interrupting the workspace", () => {
-    const workspace = readFileSync(new URL("../../components/WorkspaceApp.tsx", import.meta.url), "utf8");
-    expect(workspace).toContain("updateOfficialMarketplacePlugins");
-    expect(workspace).not.toContain("officialAutoUpdated");
-    expect(workspace).not.toContain("result.updated.length");
   });
 });

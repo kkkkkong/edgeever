@@ -41,10 +41,8 @@ export const shouldRequestPluginTrustAcknowledgement = ({
   acknowledged,
   enabled,
   extensionType,
-  isOfficial,
 }: {
   acknowledged: boolean;
   enabled: boolean;
   extensionType: "plugin" | "theme";
-  isOfficial: boolean;
-}) => enabled && extensionType === "plugin" && !acknowledged && !isOfficial;
+}) => enabled && extensionType === "plugin" && !acknowledged;
