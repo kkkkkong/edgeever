@@ -7,23 +7,23 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - name: DNS NS check (kkkkkong.top)
+      - name: DNS check (notes.kkkkkong.top)
         run: |
-          echo "== NS via Cloudflare 1.1.1.1 =="
-          dig +short NS kkkkkong.top @1.1.1.1
-          echo "== NS via Google 8.8.8.8 =="
-          dig +short NS kkkkkong.top @8.8.8.8
-          echo "== NS via system resolver =="
-          dig +short NS kkkkkong.top
-      - name: Health check
-        run: curl -sS -w "\nHTTP %{http_code}\n" https://edgeever.376634352.workers.dev/api/health
-      - name: OpenAPI check
+          echo "== A record via 1.1.1.1 =="
+          dig +short notes.kkkkkong.top @1.1.1.1
+          echo "== via Google =="
+          dig +short notes.kkkkkong.top @8.8.8.8
+      - name: Health check (custom domain)
+        run: curl -sS -w "\nHTTP %{http_code}\n" https://notes.kkkkkong.top/api/health
+      - name: OpenAPI check (custom domain)
         run: |
-          curl -sS -o openapi.json -w "HTTP %{http_code}\n" https://edgeever.376634352.workers.dev/api/openapi.json
+          curl -sS -o openapi.json -w "HTTP %{http_code}\n" https://notes.kkkkkong.top/api/openapi.json
           wc -c openapi.json
-      - name: Admin login check
+      - name: Admin login check (custom domain)
         env:
           PASSWORD: ${{ secrets.EDGE_EVER_VERIFY_PASSWORD }}
         run: |
-          curl -sS -o login.json -w "HTTP %{http_code}\n" -X POST https://edgeever.376634352.workers.dev/api/v1/auth/login -H "Content-Type: application/json" -d "{\"username\":\"admin\",\"password\":\"$PASSWORD\"}"
+          curl -sS -o login.json -w "HTTP %{http_code}\n" -X POST https://notes.kkkkkong.top/api/v1/auth/login -H "Content-Type: application/json" -d "{\"username\":\"admin\",\"password\":\"$PASSWORD\"}"
           head -c 200 login.json; echo
+      - name: Health check (workers.dev fallback)
+        run: curl -sS -o /dev/null -w "HTTP %{http_code}\n" https://edgeever.376634352.workers.dev/api/health
