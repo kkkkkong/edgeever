@@ -1,38 +1,22 @@
-name: Verify EdgeEver instance (one-off)
+name: Verify EdgeEver instance
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
 
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify health, openapi and admin login
+      - name: Health check
+        run: curl -sS -w "\nHTTP %{http_code}\n" https://edgeever.376634352.workers.dev/api/health
+      - name: OpenAPI check
+        run: |
+          curl -sS -o openapi.json -w "HTTP %{http_code}\n" https://edgeever.376634352.workers.dev/api/openapi.json
+          wc -c openapi.json
+          head -c 120 openapi.json; echo
+      - name: Admin login check
         env:
-          BASE: https://edgeever.376634352.workers.dev
           PASSWORD: ${{ secrets.EDGE_EVER_VERIFY_PASSWORD }}
         run: |
-          set -uo pipefail
-          echo "== 1) GET /api/health =="
-          code=$(curl -sS -o /tmp/health.json -w "%{http_code}" "$BASE/api/health")
-          echo "HTTP $code"
-          cat /tmp/health.json; echo
-
-          echo "== 2) GET /api/openapi.json =="
-          code2=$(curl -sS -o /tmp/openapi.json -w "%{http_code}" "$BASE/api/openapi.json")
-          echo "HTTP $code2"
-          python3 -c "import json;d=json.load(open('/tmp/openapi.json'));print('openapi:',d.get('openapi'),'| paths:',len(d.get('paths',{})))"
-
-          echo "== 3) POST /api/v1/auth/login (admin) =="
-          export PASSWORD
-          code3=$(python3 -c "
-import json,os,urllib.request
-payload=json.dumps({'username':'admin','password':os.environ['PASSWORD']}).encode()
-req=urllib.request.Request('$BASE/api/v1/auth/login',data=payload,headers={'Content-Type':'application/json'})
-try:
-    r=urllib.request.urlopen(req,timeout=30)
-    print(r.status, r.read().decode()[:400])
-except urllib.error.HTTPError as e:
-    print(e.code, e.read().decode()[:400])
-")
-          echo "$code3"
+          curl -sS -o login.json -w "HTTP %{http_code}\n" -X POST https://edgeever.376634352.workers.dev/api/v1/auth/login -H "Content-Type: application/json" -d "{\"username\":\"admin\",\"password\":\"$PASSWORD\"}"
+          head -c 400 login.json; echo
